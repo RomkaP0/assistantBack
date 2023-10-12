@@ -2,7 +2,6 @@ package romka_po.plugins.database.schema
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.Serializable
-import org.h2.engine.Mode
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction

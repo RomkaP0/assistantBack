@@ -25,10 +25,10 @@ import java.nio.channels.UnresolvedAddressException
 
 fun Application.configureDatabases() {
     val database = Database.connect(
-        url = "jdbc:h2:file:./src/main/resources/db",
-        user = "root",
+        url = "jdbc:postgresql://localhost:5432/postgres",
+        user = "postgres",
         password = "root",
-        driver = "org.h2.Driver",
+        driver = "org.postgresql.Driver",
     )
     val userService = UserService(database)
     val marksService = MarksService(database)
@@ -87,6 +87,10 @@ fun Application.configureDatabases() {
         }
     }
     routing {
+        get("/"){
+            println("Hel")
+            call.respondText("Hello World!")
+        }
         // Create user
         post("/users") {
             val user = call.receive<ExposedUser>()
