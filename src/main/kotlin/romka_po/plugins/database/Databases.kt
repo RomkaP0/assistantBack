@@ -173,6 +173,11 @@ fun Application.configureDatabases() {
             val id = marksService.create(mark)
             call.respond(HttpStatusCode.Created, id)
         }
+        get("/mark/{id}"){
+            val id = call.parameters["id"] ?: throw IllegalArgumentException("Invalid ID")
+            val mark = marksService.read(id)
+            call.respond(mark!!)
+        }
 
         // Delete user
         delete("/users/{id}") {
