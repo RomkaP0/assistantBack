@@ -6,8 +6,6 @@ services:
       - ./:/assistant
     ports:
       - 8080:8080
-    networks:
-      - ktor-network
     links:
       - database
     depends_on:
@@ -27,6 +25,3 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 1s
-networks:
-  ktor-network:
-    driver: bridge
