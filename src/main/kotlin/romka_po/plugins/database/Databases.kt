@@ -16,6 +16,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.streams.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import romka_po.plugins.Make
@@ -27,9 +28,16 @@ import java.io.InputStreamReader
 import java.lang.Exception
 import java.nio.channels.UnresolvedAddressException
 
+@Serializable
+data class User(
+    val email: String,
+    val password: String = "",
+)
+
 fun Application.configureDatabases() {
     val database = Database.connect(
-        url = "jdbc:postgresql://assistant-db:5432/postgres",
+//        url = "jdbc:postgresql://assistant-db:5432/postgres",
+        url = "jdbc:postgresql://localhost:5432/postgres",
         driver = "org.postgresql.Driver",
         user = "postgres",
         password = "root"
@@ -133,59 +141,88 @@ fun Application.configureDatabases() {
 //            }
 //        }
 //    }
+
+    suspend fun checkProfileExist(data: String): Boolean {
+        val user = userService.read(data)
+        return user != null
+    }
     routing {
-        get("/") {
-            println("Hel")
-            call.respondText("Hello World!")
-        }
-        // Create user
-        post("/users") {
-            val user = call.receive<ExposedUser>()
-            val id = userService.create(user)
-            call.respond(HttpStatusCode.Created, id)
-        }
-        // Read user
-        get("/users/{id}") {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val user = userService.read(id)
-            if (user != null) {
-                call.respond(HttpStatusCode.OK, user)
+        post("users/token/send") {
+            val token = call.receive<String>().replace("\"", "")
+            if (checkProfileExist(token)) {
+                call.respond(HttpStatusCode.Conflict)
             } else {
-                call.respond(HttpStatusCode.NotFound)
+                //Поменять на номер телефона
+                userService.create(
+                    ExposedUser(
+                        email = "", password = "", token = token, verify = true
+                    )
+                )
+                call.respond(HttpStatusCode.OK)
             }
         }
-        // Update user
-        put("/users/{id}") {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            val user = call.receive<ExposedUser>()
-            userService.update(id, user)
-            call.respond(HttpStatusCode.OK)
+        post("users/password/send") {
+            val user = call.receive<User>()
+//            if (checkProfileExist(user.email)) {
+//                call.respond(HttpStatusCode.Conflict)
+//            } else {
+//                userService.create(
+//                    ExposedUser(
+//                        email = user.email, password = user.password, token = "", verify = false
+//                    )
+//                )
+                call.respond(HttpStatusCode.OK)
+//            }
         }
-        // Delete user
-        delete("/users/{id}") {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            userService.delete(id)
-            call.respond(HttpStatusCode.OK)
-        }
+//        // Create user
+//        post("/users") {
+//            val user = call.receive<ExposedUser>()
+//            val id = userService.create(user)
+//            call.respond(HttpStatusCode.Created, id)
+//        }
+//        // Read user
+//        get("/users/{id}") {
+//            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+//            val user = userService.read(id)
+//            if (user != null) {
+//                call.respond(HttpStatusCode.OK, user)
+//            } else {
+//                call.respond(HttpStatusCode.NotFound)
+//            }
+//        }
+//        // Update user
+//        put("/users/{id}") {
+//            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+//            val user = call.receive<ExposedUser>()
+//            userService.update(id, user)
+//            call.respond(HttpStatusCode.OK)
+//        }
+//        // Delete user
+//        delete("/users/{id}") {
+//            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
+//            userService.delete(id)
+//            call.respond(HttpStatusCode.OK)
+//        }
 
-        post("/mark") {
-            val mark = call.receive<ExposedMark>()
-            val id = marksService.create(mark)
-            call.respond(HttpStatusCode.Created, id)
+        get("/marks") {
+            val mark = marksService.readAll()
+            call.respond(mark)
         }
-        get("/mark/{id}"){
+        get("/marks/{id}") {
             val id = call.parameters["id"] ?: throw IllegalArgumentException("Invalid ID")
             val mark = marksService.read(id)
             call.respond(mark!!)
         }
+        get("/models/{make_id}") {
+            val makeId = call.parameters["make_id"] ?: throw IllegalArgumentException("Invalid ID")
+            val models = modelService.readModelsFromMark(makeId)
 
-        // Delete user
-        delete("/users/{id}") {
-            val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID")
-            userService.delete(id)
-            call.respond(HttpStatusCode.OK)
+            call.respond(models)
         }
-
+        get("/models") {
+            val models = modelService.readAll()
+            call.respond(models)
+        }
 
     }
 }

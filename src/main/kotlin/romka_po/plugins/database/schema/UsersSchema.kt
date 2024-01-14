@@ -8,12 +8,14 @@ import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.*
 
 @Serializable
-data class ExposedUser(val name: String, val age: Int)
+data class ExposedUser(val email: String, val password: String, val token:String, val verify:Boolean)
 class UserService(private val database: Database) {
     object Users : Table() {
         val id = integer("id").autoIncrement()
-        val name = varchar("name", length = 50)
-        val age = integer("age")
+        val email = varchar("email", length = 50)
+        val password = varchar("password", length = 50)
+        val token = varchar("token", length = 100)
+        val verify = bool("verify")
 
         override val primaryKey = PrimaryKey(id)
     }
@@ -29,15 +31,17 @@ class UserService(private val database: Database) {
 
     suspend fun create(user: ExposedUser): Int = dbQuery {
         Users.insert {
-            it[name] = user.name
-            it[age] = user.age
+            it[email] = user.email
+            it[password] = user.password
+            it[token] = user.token
+            it[verify] = user.verify
         }[Users.id]
     }
 
-    suspend fun read(id: Int): ExposedUser? {
+    suspend fun read(data: String): ExposedUser? {
         return dbQuery {
-            Users.select { Users.id eq id }
-                .map { ExposedUser(it[Users.name], it[Users.age]) }
+            Users.select { (Users.email eq data) or(Users.token eq data) }
+                .map { ExposedUser(it[Users.email], it[Users.password], it[Users.token], it[Users.verify]) }
                 .singleOrNull()
         }
     }
@@ -45,8 +49,10 @@ class UserService(private val database: Database) {
     suspend fun update(id: Int, user: ExposedUser) {
         dbQuery {
             Users.update({ Users.id eq id }) {
-                it[name] = user.name
-                it[age] = user.age
+                it[email] = user.email
+                it[password] = user.password
+                it[token] = user.token
+                it[verify] = user.verify
             }
         }
     }

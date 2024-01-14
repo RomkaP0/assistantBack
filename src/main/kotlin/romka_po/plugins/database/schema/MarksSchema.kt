@@ -14,7 +14,7 @@ data class ExposedMark(
     val cyrillic_name: String,
     val popular: Boolean,
     val country: String,
-    val modelsCount: Int
+    val modelsCount: Int,
 )
 
 class MarksService(private val database: Database) {
@@ -65,6 +65,19 @@ class MarksService(private val database: Database) {
                 .singleOrNull()
         }
     }
+    suspend fun readAll():List<ExposedMark>{
+        return dbQuery {
+            Marks.selectAll().map (::resultRowToMark)
+        }
+    }
+    private fun resultRowToMark(row: ResultRow) = ExposedMark(
+        id = row[Marks.id],
+        name = row[Marks.name],
+        cyrillic_name = row[Marks.cyrillic_name],
+        popular = row[Marks.popular],
+        country = row[Marks.country],
+        modelsCount = row[Marks.modelsCount]
+    )
 
     suspend fun update(id: String, mark: ExposedMark) {
         dbQuery {

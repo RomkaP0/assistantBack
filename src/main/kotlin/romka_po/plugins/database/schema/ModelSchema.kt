@@ -73,6 +73,24 @@ class ModelService(private val database: Database) {
                 .singleOrNull()
         }
     }
+
+    suspend fun readModelsFromMark(markId: String): List<ExposedModel>{
+        return dbQuery {
+            Model.select{Model.mark eq markId}.map {
+                ExposedModel(
+                it[Model.id],
+                it[Model.mark],
+                it[Model.name],
+                it[Model.cyrillic_name],
+                it[Model.myclass],
+                it[Model.year_from],
+                it[Model.year_to],
+                it[Model.image]
+                )
+            }
+        }
+    }
+
     suspend fun readAll() :List<ExposedModel> {
         return dbQuery {
             Model.selectAll().map {
@@ -86,7 +104,7 @@ class ModelService(private val database: Database) {
                     it[Model.year_to],
                     it[Model.image]
                 )
-            }.filter { it.image=="" }
+            }
         }
     }
 

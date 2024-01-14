@@ -58,7 +58,6 @@ fun Application.configureRouting() {
 ////                makes.add(it.copy(modelsCount = count))
 //            }
             call.respondText("Hello World!")
-
         }
     }
 }
